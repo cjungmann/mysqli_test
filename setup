@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+declare SQL_ROOT
+declare SQL_PWORD
+declare -a SQL_CREDS
+declare -a SQL_OPTIONS=(
+    -B        # Batch mode, tabs between fields, newline between records
+    -N        # Skip column name headers
+    )
+
+declare DBNAME="mysqli_test"
+
+get_credentials()
+{
+    local -n sql_root=SQL_ROOT
+    local -n sql_pword=SQL_PWORD
+    local -n sql_creds=SQL_CREDS
+    local -i tries=0
+
+    echo "Please provide the user name and password for"
+    echo "a user who is authorized to create a new database,"
+    echo "a new user."
+    while [ 0 ]; do
+        echo
+        read    -p " Enter a user name: " sql_root
+        read -s -p "Enter the password: " sql_pword
+        echo
+
+        mysql "-u${sql_root}" "-p${sql_pword}" -e "" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            sql_creds=( -u "${sql_root}" -p "${sql_pword}" )
+            return 0
+        else
+            tries=$tries+1
+            echo -n "Invalid credentials.  "
+            if [ $tries -gt 2 ]; then
+                echo "Too many tries.  Goodbye."
+                return 1
+            else
+                echo "Try again."
+            fi
+        fi
+    done
+}
+
+check_database()
+{
+    local IFS=$'\n'
+    local -a query=(
+        "SELECT COUNT(*)"
+        "  FROM information_schema.SCHEMATA"
+        " WHERE SCHEMA_NAME='${DBNAME}'"
+    )
+
+    IFS=$' '
+    local -i count=$( mysql "${SQL_CREDS[@]}" -BN "${query[*]}" )
+    [ ${count} -eq 1 ];
+}
+
+check_user()
+{
+    local IFS=$'\n'
+    local -a query=(
+        "SELECT COUNT(*)"
+        "  FROM mysql.user"
+        " WHERE User='${DBNAME}'"
+    )
+    IFS=$' '
+    local -i count=$( mysql "${SQL_CREDS[@]}" -BN "${query[*]}" )
+    [ ${count} -eq 1 ];
+}
+
+install_dbase()
+{
+    mysql "${SQL_CREDS[@]}" -e "CREATE DATABASE ${DBNAME}"
+    if [ $? -ne 0 ]; then
+        echo "Failed to create database."
+        return 1
+    else
+        return 0
+    fi
+}
+
+install_user()
+{
+    mysql "${SQL_CREDS[@]}" -e "CREATE USER ${DBNAME}"
+    if [ $? -eq 0 ]; then
+        mysql "${SQL_CREDS[@]}" -e "GRANT EXECUTE ON *.* TO '${DBNAME}'"
+        if [ $? -eq 0 ]; then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+if get_credentials; then
+    if ! check_dbase; then
+        install_dbase
+    fi
+
+    if ! check_user; then
+        install_user
+    fi
+
+    if check_dbase && check_user; then
+        mysql "${SQL_CREDS[@]}" "${DBNAME}" -e tables_and_procs.sql
+    fi
+fi
+
+
