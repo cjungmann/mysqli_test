@@ -51,11 +51,6 @@ check_database()
         " WHERE SCHEMA_NAME='${DBNAME}'"
     )
 
-    echo "Using the following credentials,"
-    echo "${SQL_CREDS[@]}"
-    echo "About to check for the database with this query:"
-    echo "${query[*]}"
-
     local -i count=$( mysql "${SQL_CREDS[@]}" -BN -e "${query[*]}" )
     [ ${count} -eq 1 ];
 }
@@ -66,7 +61,8 @@ check_user()
     local -a query=(
         "SELECT COUNT(*)"
         "  FROM mysql.user"
-        " WHERE User='${DBNAME}'"
+        " WHERE Host='localhost'"
+        "   AND User='${DBNAME}'"
     )
     IFS=$' '
     local -i count=$( mysql "${SQL_CREDS[@]}" -BN -e "${query[*]}" )
@@ -86,9 +82,9 @@ install_database()
 
 install_user()
 {
-    mysql "${SQL_CREDS[@]}" -e "CREATE USER ${DBNAME}"
+    mysql "${SQL_CREDS[@]}" -e "CREATE USER '${DBNAME}'@'localhost'"
     if [ $? -eq 0 ]; then
-        mysql "${SQL_CREDS[@]}" -e "GRANT EXECUTE ON *.* TO '${DBNAME}'"
+        mysql "${SQL_CREDS[@]}" -e "GRANT EXECUTE,SELECT ON *.* TO '${DBNAME}'@'localhost'"
         if [ $? -eq 0 ]; then
             return 0
         fi
@@ -99,15 +95,21 @@ install_user()
 
 if get_credentials; then
     if ! check_database; then
+        echo "Database ${DBNAME} not found.  Creating it now."
         install_database
+    else
+        echo "Database ${DBNAME} confirmed."
     fi
 
     if ! check_user; then
+        echo "MySQL user ${DBNAME} not found.  Creating it now."
         install_user
+    else
+        echo "MySQL user ${DBNAME} confirmed."
     fi
 
     if check_database && check_user; then
-        mysql "${SQL_CREDS[@]}" "${DBNAME}" -e tables_and_procs.sql
+        mysql "${SQL_CREDS[@]}" "${DBNAME}" < tables_and_procs.sql
     fi
 fi
 
