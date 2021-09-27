@@ -28,7 +28,7 @@ get_credentials()
 
         mysql "-u${sql_root}" "-p${sql_pword}" -e "" 2>/dev/null
         if [ $? -eq 0 ]; then
-            sql_creds=( -u "${sql_root}" -p "${sql_pword}" )
+            sql_creds=( -u "${sql_root}" "-p${sql_pword}" )
             return 0
         else
             tries=$tries+1
@@ -45,15 +45,18 @@ get_credentials()
 
 check_database()
 {
-    local IFS=$'\n'
     local -a query=(
         "SELECT COUNT(*)"
         "  FROM information_schema.SCHEMATA"
         " WHERE SCHEMA_NAME='${DBNAME}'"
     )
 
-    IFS=$' '
-    local -i count=$( mysql "${SQL_CREDS[@]}" -BN "${query[*]}" )
+    echo "Using the following credentials,"
+    echo "${SQL_CREDS[@]}"
+    echo "About to check for the database with this query:"
+    echo "${query[*]}"
+
+    local -i count=$( mysql "${SQL_CREDS[@]}" -BN -e "${query[*]}" )
     [ ${count} -eq 1 ];
 }
 
@@ -66,11 +69,11 @@ check_user()
         " WHERE User='${DBNAME}'"
     )
     IFS=$' '
-    local -i count=$( mysql "${SQL_CREDS[@]}" -BN "${query[*]}" )
+    local -i count=$( mysql "${SQL_CREDS[@]}" -BN -e "${query[*]}" )
     [ ${count} -eq 1 ];
 }
 
-install_dbase()
+install_database()
 {
     mysql "${SQL_CREDS[@]}" -e "CREATE DATABASE ${DBNAME}"
     if [ $? -ne 0 ]; then
@@ -95,15 +98,15 @@ install_user()
 }
 
 if get_credentials; then
-    if ! check_dbase; then
-        install_dbase
+    if ! check_database; then
+        install_database
     fi
 
     if ! check_user; then
         install_user
     fi
 
-    if check_dbase && check_user; then
+    if check_database && check_user; then
         mysql "${SQL_CREDS[@]}" "${DBNAME}" -e tables_and_procs.sql
     fi
 fi
