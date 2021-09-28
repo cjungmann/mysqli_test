@@ -1,4 +1,4 @@
-# Project mysqli Test
+# Project mysqli_test
 
 A database connection, once established, should remain viable
 through several interactions.  This expectation appears too
