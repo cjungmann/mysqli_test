@@ -109,6 +109,7 @@ if get_credentials; then
     fi
 
     if check_database && check_user; then
+        echo "Creating table and stored procedures."
         mysql "${SQL_CREDS[@]}" "${DBNAME}" < tables_and_procs.sql
     fi
 fi
