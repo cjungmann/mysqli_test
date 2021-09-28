@@ -39,11 +39,21 @@ This project includes:
   1. create a new user, **mysqli_test** with no password, and
      granted EXECUTE and SELECT privileges
 
+### Installation
+
 Ideally one simply clones the project, enters the new directory,
 then calls *./setup*.  In the unlikely event that someone already
 has a *mysqli_test* database and user, it will be necessary to
 manually create these items and change the *mysqli_test.php* to
 reflect the alternate names.
+
+### Run the Test
+
+When setup is complete, run the test with:
+
+~~~sh
+php mysqli_test.php
+~~~
 
 ## Analysis
 
