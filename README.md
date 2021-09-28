@@ -6,10 +6,13 @@ optimistic when I upgraded from an old tech stack including
 PHP and MySQL to recent versions of the stack that uses MariaDB
 in place of MySQL.
 
-This old web application builds documents with multiple calls
-to stored procedures using **mysqli** prepared statements.  This
-project supports my posting on this topic on
-[Stack Exchange](www.stackexchange.com).
+During a port of an old web application to the new stack,  I
+found that preparing a new statement after running a stored
+procedure fails in a familiar but unexpected way, resulting
+in a *Packets out or order* error.  This project supports a
+Stack Exchange question with additional discussion and 
+scripts to make it very easy to duplicate the problem on
+another computer.
 
 ## Usage
 
