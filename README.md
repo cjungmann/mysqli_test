@@ -10,7 +10,7 @@ During a port of an old web application to the new stack,  I
 found that preparing a new statement after running a stored
 procedure fails in a familiar but unexpected way, resulting
 in a *Packets out or order* error.  This project supports a
-Stack Exchange question with additional discussion and 
+[Stack Exchange question][1] with additional discussion and 
 scripts to make it very easy to duplicate the problem on
 another computer.
 
@@ -110,3 +110,4 @@ the expected trailing result after executing a stored procedure.
 Subsequently, the next `mysqli_prepare()` fails with the dread
 *Packets out of order* message.
 
+[1]: https://stackoverflow.com/questions/69368867/what-is-the-best-practice-for-calling-stored-procedures-using-the-php-mysqli-int "so_post"
