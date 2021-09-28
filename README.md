@@ -45,7 +45,7 @@ This project includes:
 ### Installation
 
 Ideally one simply clones the project, enters the new directory,
-then calls *./setup*:
+then calls *setup*:
 
 ~~~sh
 user:~/mysqli_test$ ./setup
