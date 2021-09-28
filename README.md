@@ -45,43 +45,68 @@ This project includes:
 ### Installation
 
 Ideally one simply clones the project, enters the new directory,
-then calls *./setup*.  In the unlikely event that someone already
+then calls *./setup*:
+
+~~~sh
+user:~/mysqli_test$ ./setup
+~~~
+
+In the unlikely event that someone already
 has a *mysqli_test* database and user, it will be necessary to
-manually create these items and change the *mysqli_test.php* to
-reflect the alternate names.
+manually use or create an alternate database and user, load the
+SQL script, and update *mysqli_test.php* to reflect the changes.
 
 ### Run the Test
 
 When setup is complete, run the test with:
 
 ~~~sh
-php mysqli_test.php
+user:~/mysqli_test$ php mysqli_test.php
 ~~~
 
 ## Analysis
 
-The problem revolves around a failure to return a database
-connection to a usable state after using a prepared statement to
-run a stored procedure.  After the first prepared statement is
-done, an attempt to prepare a second statment fails with a
-*Packets out of order** error.  
+With MariaDB replacing MySQL as the default database in a
+LAMP web server stack, it is important to ensure that old code
+runs in that environment.
 
-I also encountered this problem while developing the original
-web application.  It turned out that upon completion of a stored
-procedure, an extra empty result is generated that must be
-disposed of before the connection can be used again.
+My problem revolves around a failure to return a database
+connection to a usable state after using a prepared statement
+to run a stored procedure.  After the first prepared statement
+is done, an attempt to prepare a second statement produces a
+*Packets out of order* error.  
 
-I succeeded in solving this problem in PHP using mysqli to
-interface with MySQL and in another project that uses the C API.
+I encountered and solved this problem while developing the
+original web application.  It turned out that upon completion of
+a stored procedure, the database engine generates an extra empty
+result that must be disposed of before the connection can be used
+again.  Failure to handle the extra result leads to the *Packets
+out of order* error.
 
-MariaDB is the new default database for a (W|L)AMP stack.  It
-is advertised as a drop-in replacement for MySQL.  With respect
-to the C API, outside of one compatibility issue involving
-uninitialized fields in the MYSQL_FIELD structure, the drop-in
-promise has been fulfilled.
+### C API: a New Persepctive
 
-My C API code was modelled after the older PHP/mysqli code,
-which no longer works.  The call to `mysqli_stmt_next_result()`
-does not return the expected trailing result after executing
-a stored procedure.  Subsequently, the next `mysqli_prepare()`
-fails with the dread *Packets out of order* message.
+I had further developed ideas using stored procedures to build
+pages with a C++ project using MySQL's C API.
+
+While porting the C++ project to use MariaDB, I found only one
+compatibility problem involving uninitialized fields in the
+MYSQL_FIELD structure.  Aside from that one problem, MariaDB has
+fulfilled its promise to be a drop-in replacement for MySQL.
+
+Having similar solutions in two environments has been useful
+in investigating the PHP/mysqli problem.  I could rewrite some
+of the PHP/mysqli code to exactly match what I had proved was
+working in the C API.  When the PHP/mysqli persistently fails
+to run, I can see which functions are likely culprits.
+
+### Blame
+
+Since the C API of MariaDB works and the PHP *mysqli* code
+fails, I strongly suspect the failure is in the implementation
+of the *mysqli* wrapper functions.
+
+The PHP call to `mysqli_stmt_next_result()` does not return
+the expected trailing result after executing a stored procedure.
+Subsequently, the next `mysqli_prepare()` fails with the dread
+*Packets out of order* message.
+
