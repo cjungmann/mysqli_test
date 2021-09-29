@@ -39,7 +39,7 @@ function get_person($connection, $first_name)
             printf("%3d %20s %20s %2d.\n", $id, $fname, $lname, $pets);
 
          $stmt->free_result();
-         while ($connection->next_result())
+         while ($stmt->next_result())
          {
             $stmt->store_result();
             while ($stmt->fetch())
