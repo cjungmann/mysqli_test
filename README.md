@@ -14,7 +14,16 @@ in a *Packets out or order* error.  This project supports a
 scripts to make it very easy to duplicate the problem on
 another computer.
 
-## Usage
+## Solution TL;DR 
+
+I was finally able to run these queries by upgrading PHP
+to version 8.  Specifically 8.0.11, though an earlier version
+8 may be sufficient.  Nothing I did worked with PHP 7.?.?.
+
+## Project Usage
+
+The following information should be helpful if you want to
+run a similar PHP/mysqli test.
 
 The code fragment found in the Stack Exchange question may
 be sufficient for comment, in which case this project is
